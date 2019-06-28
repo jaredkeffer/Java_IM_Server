@@ -46,7 +46,7 @@ public class Server extends JFrame{
                 }catch(EOFException eofException){
                     showMessage("\n Server ended the connection. ");
                 }finally{
-                    closeCrap();
+                    closeStreams();
                 }
             }
         }catch(IOException ioException){
@@ -66,10 +66,59 @@ public class Server extends JFrame{
         input = new ObjectInputStream(connection.getInputStream());
         showMessage("\n Streams are set up! \n");
     }
+
     // during the chat conversation
     private void whileChatting() throws IOException{
         String message = " You are now connected. ";
         sendMessage(message);
+        ableToType(true);
+        do{
+            try{
+                message = (String) input.readObject();
+                showMessage("\n" + message);
+            }catch(ClassNotFoundException classNotFoundException){
+                sendMessage("\n Did not send a string.");
+            }
+        } while(!message.equals("CLIENT - END"));
+    }
+
+    // close streams and sockets after you are done
+    private void closeStreams(){
+        showMessage("\n Closing connections... \n");
+        ableToType(false);
+        try{
+            output.close();
+            input.close();
+            connection.close();
+        }catch(IOException ioException){
+            ioException.printStackTrace();
+        }
+    }
+
+    // send a message to client
+    private void sendMessage(String message){
+        try{
+            output.writeObject("SERVER - " + message);
+            output.flush();
+            showMessage("\nSERVER - " + message);
+        }catch(IOException ioException){
+            chatWindow.append("\n Error: Can't send message.");
+        }
+    }
+
+    // update chat window
+    private void showMessage(final String text){
+        SwingUtilities.invokeLater(
+            new Runnable(){
+                public void run(){
+                    chatWindow.append(text);
+                }
+            }
+        );
+    }
+
+    // let the user type
+    private void ableToType(final boolean tof){
         
     }
 }
